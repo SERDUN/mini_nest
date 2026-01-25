@@ -1,5 +1,7 @@
 import { Injectable } from "../decorators/injectable.decorator.js";
+import { DependencyInjection } from "../utils/dependency-injection.js";
 
+@Injectable()
 class SampleDependency{
   do(){
     console.log("Doing dependency detected.");
@@ -28,4 +30,8 @@ export const runServiceExample = () => {
 
   const isDependencyInjectable = Reflect.getMetadata("injectable", SampleDependency);
   console.log("Is SampleDependency injectable?", isDependencyInjectable);
+
+  console.log("DependencyInjection container example:");
+  const myService = DependencyInjection.get<SampleService>(SampleService);
+  myService.execute();
 }
