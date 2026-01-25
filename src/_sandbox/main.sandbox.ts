@@ -1,7 +1,8 @@
-import { runExampleDecorator, runUserExample } from "./samples/index.js";
+import { runExampleDecorator, runServiceExample, runUserExample } from "./samples/index.js";
 
 
 export const runSandbox = () => {
  // runExampleDecorator();
-  runUserExample();
+  //runUserExample();
+  runServiceExample()
 };
