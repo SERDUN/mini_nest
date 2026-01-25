@@ -1,5 +1,9 @@
-import { runExampleDecorator } from "#_sandbox/decorators/example.decorator.js";
+import { runSandbox } from "./_sandbox/main.sandbox.js";
 
-console.log('Hello World!');
+process.on('uncaughtException', (err) => {
+  console.error('CRITICAL ERROR:', err);
+});
 
-runExampleDecorator();
+console.log('Initialize!');
+
+runSandbox();
