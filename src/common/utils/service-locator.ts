@@ -3,11 +3,20 @@ import { Scope } from "../types/di.scope.js";
 import { InjectionToken } from "../decorators/inject.decorator.js";
 
 export class ServiceLocator {
-  private  cache: Map<any, any> = new Map();
-  private  typeCache: Map<any, any> = new Map();
+  private cache: Map<any, any> = new Map();
+  private typeCache: Map<any, any> = new Map();
+  private providers = new Set<any>();
+
+  public register(provider: any) {
+    this.providers.add(provider);
+  }
 
    resolve<T>(target: any): T {
     console.log(`ServiceLocator: Resolving target:`, target);
+
+     if (!this.providers.has(target)) {
+       throw new Error(`Service ${target.name} is not registered in any Module! Did you forget to add it to 'providers'?`);
+     }
 
     const injectableMetadata = Reflect.getMetadata(INJECTABLE, target)
     const injectable=injectableMetadata?.injectable;
@@ -71,4 +80,6 @@ export class ServiceLocator {
     console.log(`Registering type for token: ${token.toString()}`, { token, type });
     this.typeCache.set(token, type);
   }
+
+
 }
