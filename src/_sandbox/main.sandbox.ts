@@ -1,8 +1,9 @@
-import { runConstructorDecoratorExample } from "./samples/constructor.metadata.js";
+import { runModuleExample } from "./samples/module.js";
 
 export const runSandbox = () => {
- // runExampleDecorator();
-  //runUserExample();
- // runServiceExample()
-  runConstructorDecoratorExample()
+  // runExampleDecorator();
+  // runUserExample();
+  // runServiceExample()
+  // runConstructorDecoratorExample()
+  runModuleExample()
 };
