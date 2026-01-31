@@ -1,13 +1,17 @@
-import { Injectable, InjectableMetadata } from "../../common/decorators/injectable.decorator.js";
+import { Injectable } from "../../common/decorators/injectable.decorator.js";
 import { ServiceLocator } from "../../common/utils/service-locator.js";
-import { getMetadata } from "../../common/utils/metadata.js";
-import { INJECTABLE } from "../../common/types/metadata.keys.js";
 import { Scope } from "../../common/types/di.scope.js";
+import { Inject } from "../../common/decorators/inject.decorator.js";
+
+const RETRY_COUNT = Symbol('RETRY_COUNT');
+const RETRY_SUMM = Symbol('RETRY_SUMM');
 
 @Injectable({scope:Scope.TRANSIENT})
-class SampleDependency{
-  constructor(private _initial: number=0) {
+export class SampleDependency{
+  constructor(@Inject(RETRY_COUNT) private _initial: number=0,@Inject(RETRY_SUMM) private _summ: number=0) {
+    console.log("SampleDependency created with initial value:", this._initial);
     this.counter = this._initial;
+    console.log("Initialize counter:", this._initial);
   }
 
   private counter:number=0;
@@ -28,32 +32,18 @@ class SampleService {
   }
 }
 
-const sample1 = () => {
+const sample = () => {
   console.log("Running service example...");
+  ServiceLocator.registerType(RETRY_COUNT,4);
 
   const dependency = new SampleDependency();
   const service = new SampleService(dependency);
   service.execute();
 
-  // const isServiceInjectable = Reflect.getMetadata("injectable", SampleService);
-  const isServiceInjectable = getMetadata<InjectableMetadata>(INJECTABLE, SampleService);
-  console.log("Is SampleService injectable?", isServiceInjectable?.injectable);
-
-  // const isDependencyInjectable = Reflect.getMetadata("injectable", SampleDependency);
-  const isDependencyInjectable = getMetadata<InjectableMetadata>(INJECTABLE, SampleDependency);
-  console.log("Is SampleDependency injectable?", isDependencyInjectable?.injectable);
-
-  console.log("DependencyInjection container example:");
   const myService = ServiceLocator.resolve<SampleService>(SampleService);
-
   myService.execute();
 }
 
 export const runServiceExample = () => {
-  const myService = ServiceLocator.resolve<SampleService>(SampleService);
-  myService.execute();
-  const myService1 = ServiceLocator.resolve<SampleService>(SampleService);
-  myService1.execute();
-  const myService2 = ServiceLocator.resolve<SampleService>(SampleService);
-  myService2.execute();
+  sample()
 }
