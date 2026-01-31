@@ -1,14 +1,12 @@
 import { DESIGN_PARAMTYPES, INJECT, INJECTABLE } from "../types/metadata.keys.js";
-import { InjectableMetadata } from "../decorators/injectable.decorator.js";
 import { Scope } from "../types/di.scope.js";
 import { InjectionToken } from "../decorators/inject.decorator.js";
-import { SampleDependency } from "../../_sandbox/samples/index.js";
 
 export class ServiceLocator {
-  private static cache: Map<any, any> = new Map();
-  private static typeCache: Map<any, any> = new Map();
+  private  cache: Map<any, any> = new Map();
+  private  typeCache: Map<any, any> = new Map();
 
-  static resolve<T>(target: any): T {
+   resolve<T>(target: any): T {
     console.log(`ServiceLocator: Resolving target:`, target);
 
     const injectableMetadata = Reflect.getMetadata(INJECTABLE, target)
@@ -29,13 +27,13 @@ export class ServiceLocator {
       const token = constructorTokens[index];
 
         if (token) {
-          const value = ServiceLocator.resolveType(token);
+          const value = this.resolveType(token);
 
           if (value === undefined) {
             throw new Error(`DI Error: Token ${token.toString()} was injected at index ${index}, but no value was registered for it.`);
           }
 
-          return ServiceLocator.resolveType(token);
+          return this.resolveType(token);
         }
 
       const isPrimitiveOrInterface = [Number, String, Boolean, Object, Symbol].includes(dependency);
@@ -47,15 +45,15 @@ export class ServiceLocator {
         );
       }
 
-      return ServiceLocator.resolve(dependency);
+      return this.resolve(dependency);
     });
 
     if(injectableMetadata!.scope==Scope.DEFAULT){
-      if(ServiceLocator.cache.has(target)){
-        return ServiceLocator.cache.get(target);
+      if(this.cache.has(target)){
+        return this.cache.get(target);
       }else {
         const instance = new target(...instances);
-        ServiceLocator.cache.set(target,instance);
+        this.cache.set(target,instance);
         return instance;
       }
     }
@@ -63,13 +61,13 @@ export class ServiceLocator {
     return new target(...instances);
   }
 
-  static resolveType(token: InjectionToken): any {
+   resolveType(token: InjectionToken): any {
     const type = this.typeCache.get(token);
     console.log(`Resolving type for token: ${token.toString()}`, { token, type });
     return type;
   }
 
-  static registerType(token: InjectionToken, type: any): void {
+   registerType(token: InjectionToken, type: any): void {
     console.log(`Registering type for token: ${token.toString()}`, { token, type });
     this.typeCache.set(token, type);
   }

@@ -34,13 +34,14 @@ class SampleService {
 
 const sample = () => {
   console.log("Running service example...");
-  ServiceLocator.registerType(RETRY_COUNT,4);
+  const serviceLocator = new ServiceLocator();
+  serviceLocator.registerType(RETRY_COUNT,4);
 
   const dependency = new SampleDependency();
   const service = new SampleService(dependency);
   service.execute();
 
-  const myService = ServiceLocator.resolve<SampleService>(SampleService);
+  const myService = serviceLocator.resolve<SampleService>(SampleService);
   myService.execute();
 }
 
