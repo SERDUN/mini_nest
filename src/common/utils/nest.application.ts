@@ -1,7 +1,8 @@
 import { ServiceLocator } from "./service-locator.js";
 import express, { Express, Request, Response } from 'express';
-import { MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST } from "../types/metadata.keys.js";
+import { MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../types/metadata.keys.js";
 import { PathUtils } from "./path.utils.js";
+import { ArgsType } from "../decorators/args.decorator.js";
 
 export class NestApplication {
   private readonly app: Express;
@@ -46,11 +47,42 @@ export class NestApplication {
   }
 
   private registerRoute(method: string, path: string, controller: any, handlerName: string) {
-    console.log(`Registering ${method} ${path}`);
-
     (this.app as any)[method](path, async (req: Request, res: Response) => {
       try {
-        const result = await controller[handlerName](req, res);
+        console.log(`Registering ${method} ${path} controller: ${controller.constructor.name}, handler: ${handlerName}`);
+        const allControllersArgs = Reflect.getOwnMetadata(
+          MODULE_CONTROLLERS_REQUEST_ARGS,
+          Object.getPrototypeOf(controller)
+        );
+
+        console.log("Method:", handlerName);
+        console.log("allControllersArgs:", allControllersArgs);
+
+        const methodArgs = allControllersArgs[handlerName] || {};
+
+        console.log(`methodArgs: `, methodArgs);
+        const args: any[] = [];
+
+        Object.keys(methodArgs).forEach((indexKey) => {
+          const index = Number(indexKey);
+          const paramMetadata = methodArgs[indexKey];
+
+          switch (paramMetadata.type) {
+            case ArgsType.QUERY:
+              args[index] = paramMetadata.data ? req.query[paramMetadata.data] : req.query;
+              break;
+
+            case ArgsType.BODY:
+              args[index] = paramMetadata.data ? req.body[paramMetadata.data] : req.body;
+              break;
+
+            case ArgsType.PARAM:
+              args[index] = paramMetadata.data ? req.params[paramMetadata.data] : req.params;
+              break;
+          }
+        });
+
+        const result = await (controller as any)[handlerName](...args);
         console.log(`Registered ${method} ${path}: result =`, result);
 
         if (result !== undefined && !res.headersSent) {
