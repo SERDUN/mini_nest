@@ -3,13 +3,16 @@ import express, { Express, Request, Response } from 'express';
 import { MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../types/metadata.keys.js";
 import { PathUtils } from "./path.utils.js";
 import { ArgsType } from "../decorators/args.decorator.js";
+import { RouteArgsFactory } from "./argument_resolver.js";
 
 export class NestApplication {
   private readonly app: Express;
+  private readonly routeArgsFactory: RouteArgsFactory;
 
   constructor(private readonly serviceLocator: ServiceLocator,private readonly controllers: any[]) {
     this.app = express();
     this.app.use(express.json());
+    this.routeArgsFactory = new RouteArgsFactory();
     this.initRoutes();
   }
 
@@ -67,18 +70,13 @@ export class NestApplication {
           const index = Number(indexKey);
           const paramMetadata = methodArgs[indexKey];
 
-          switch (paramMetadata.type) {
-            case ArgsType.QUERY:
-              args[index] = paramMetadata.data ? req.query[paramMetadata.data] : req.query;
-              break;
+          const resolver = this.routeArgsFactory.getResolver(paramMetadata.type);
 
-            case ArgsType.BODY:
-              args[index] = paramMetadata.data ? req.body[paramMetadata.data] : req.body;
-              break;
-
-            case ArgsType.PARAM:
-              args[index] = paramMetadata.data ? req.params[paramMetadata.data] : req.params;
-              break;
+          if (resolver) {
+            args[index] = resolver.resolve(req, res, paramMetadata);
+          } else {
+            console.warn(`No resolver found for argument type: ${paramMetadata.type}`);
+            args[index] = undefined;
           }
         });
 
