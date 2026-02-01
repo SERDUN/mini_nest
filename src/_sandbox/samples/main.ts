@@ -44,7 +44,7 @@ function _printControllerMetadata(controller:any){
   console.log(`Controller ${controller.name} methods:`, methods);
 }
 
-export const runMain = async () => {
+const runMock= async ()=> {
   console.log("--- Initializing Mini-Nest ---");
 
   const app = await NestFactory.create(AppModule);
@@ -54,4 +54,10 @@ export const runMain = async () => {
   console.log("Fetched users:", users);
 
   _printControllerMetadata(UserController);
+
+}
+
+export const runMain = async () => {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3000);
 }

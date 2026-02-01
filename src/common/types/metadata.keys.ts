@@ -5,7 +5,6 @@ export const DESIGN_RETURNTYPE = "design:returntype" as const;
 export const INJECTABLE = "injectable:metadata" as const;
 export const INJECT = "inject:metadata" as const;
 
-
 export const MODULE_IMPORTS = "module:imports" as const;
 export const MODULE_PROVIDERS = "module:providers" as const;
 export const MODULE_CONTROLLERS = "module:controllers" as const;

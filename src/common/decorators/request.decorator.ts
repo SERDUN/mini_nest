@@ -37,4 +37,3 @@ export function Delete(path:string) {
         _request(target, propertyKey, {path, requestMethod: 'delete', methodName: propertyKey.toString()});
     }
 }
-
