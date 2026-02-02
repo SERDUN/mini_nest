@@ -1,18 +1,14 @@
 import "reflect-metadata";
 import { MODULE_CONTROLLERS_REQUEST_ARGS } from "../types/metadata.keys.js";
+import { Paramtype } from "../types/paramtype.js";
 
-export  enum ArgsType {
-    QUERY = "query",
-    BODY = "body",
-    PARAM = "param",
-}
 
 export interface RouteParamMetadata {
-  type: ArgsType;
+  type: Paramtype;
   data?: string;
 }
 
-function args(target: Object, propertyKey: string | symbol, parameterIndex: number, paramName: string | undefined, argsType: ArgsType) {
+function args(target: Object, propertyKey: string | symbol, parameterIndex: number, paramName: string | undefined, argsType: Paramtype) {
  const routeParam: RouteParamMetadata = {
     type: argsType,
     data: paramName,
@@ -30,18 +26,18 @@ function args(target: Object, propertyKey: string | symbol, parameterIndex: numb
 
 export function Query(paramName?: string) {
     return function (target: Object, propertyKey: string | symbol, parameterIndex: number) {
-      args(target, propertyKey, parameterIndex, paramName, ArgsType.QUERY);
+      args(target, propertyKey, parameterIndex, paramName, Paramtype.QUERY);
     }
 }
 
 export function Body(paramName?: string) {
     return function (target: Object, propertyKey: string | symbol, parameterIndex: number) {
-      args(target, propertyKey, parameterIndex, paramName, ArgsType.BODY);
+      args(target, propertyKey, parameterIndex, paramName, Paramtype.BODY);
     }
 }
 
 export function Param(paramName?: string) {
     return function (target: Object, propertyKey: string | symbol, parameterIndex: number) {
-      args(target, propertyKey, parameterIndex, paramName, ArgsType.PARAM);
+      args(target, propertyKey, parameterIndex, paramName, Paramtype.PARAM);
     }
 }

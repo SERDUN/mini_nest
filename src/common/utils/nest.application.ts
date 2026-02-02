@@ -2,7 +2,6 @@ import { ServiceLocator } from "./service-locator.js";
 import express, { Express, Request, Response } from 'express';
 import { MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../types/metadata.keys.js";
 import { PathUtils } from "./path.utils.js";
-import { ArgsType } from "../decorators/args.decorator.js";
 import { RouteArgsFactory } from "./argument_resolver.js";
 
 export class NestApplication {
