@@ -1,22 +1,38 @@
-
+import { z } from "zod";
 import { Injectable } from "../../common/decorators/injectable.decorator.js";
 import { Module } from "../../common/decorators/module.decorator.js";
 import { NestFactory } from "../../common/utils/nest.factory.js";
-import { Get } from "../../common/decorators/request.decorator.js";
+import { Get, Post } from "../../common/decorators/request.decorator.js"; // Додав Post
 import { Controller } from "../../common/decorators/controller.decorator.js";
 import { MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../../common/types/metadata.keys.js";
-import { Query } from "../../common/decorators/args.decorator.js";
+import { Query, Body } from "../../common/decorators/args.decorator.js"; // Додав Body
 import { ParseIntPipe } from "../../common/pipes/parce-int-pipe.js";
 import { UsePipes } from "../../common/decorators/use-pipes.decorator.js";
 import { ValidationPipe } from "../../common/pipes/validation-pipe.js";
+import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe.js"; // Ваш новий пайп
 import { UseGuards } from "../../common/decorators/use-guards.decorator.js";
 import { AuthGuard } from "../../guards/auth_guard.js";
 import { UseInterceptors } from "../../common/decorators/use-interceptors.js";
 import { TransformInterceptor } from "../../interceptors/transform-interceptor.js";
 
+const CreateUserSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 chars"),
+  age: z.number().int().positive("Age must be positive"),
+  email: z.string().email("Invalid email format")
+});
+
+type CreateUserDto = z.infer<typeof CreateUserSchema>;
+
 @Injectable()
 class UsersService {
-  findAll() { return ['Alice', 'Bob']; }
+  private users = ['Alice', 'Bob'];
+
+  findAll() { return this.users; }
+
+  create(user: CreateUserDto) {
+    this.users.push(user.name);
+    return user;
+  }
 }
 
 @UsePipes(new ValidationPipe("Controller-level pipe"))
@@ -25,18 +41,27 @@ class UsersService {
 @Controller("/user")
 class UserController {
   constructor(private usersService: UsersService) {}
+
   @Get('/users')
   getUsers(@Query("uuid") uuid: string) {
-    console.log(uuid);
-    const users=this.usersService.findAll();
-    users.push(uuid)
-    return users;
+    console.log("UUID Query:", uuid);
+    return this.usersService.findAll();
   }
 
   @Get('/status')
-    getStatus(@Query("country") country: string,@Query("limit",ParseIntPipe) limit: number) {
-    console.log(country, limit);
-    return {status: 'ok:', country, limit};
+  getStatus(
+    @Query("country") country: string,
+    @Query("limit", ParseIntPipe) limit: number
+  ) {
+    console.log("Status Params:", country, limit);
+    return { status: 'ok', country, limit };
+  }
+
+  @Post('/create')
+  @UsePipes(new ZodValidationPipe(CreateUserSchema))
+  createUser(@Body() body: CreateUserDto) {
+    console.log("Creating user:", body);
+    return this.usersService.create(body);
   }
 }
 
