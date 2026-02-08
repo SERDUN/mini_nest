@@ -1,21 +1,26 @@
 import { z } from "zod";
-import { Injectable } from "../../common/decorators/injectable.decorator.js";
-import { Module } from "../../common/decorators/module.decorator.js";
-import { NestFactory } from "../../common/utils/nest.factory.js";
-import { Get, Post } from "../../common/decorators/request.decorator.js"; // Додав Post
-import { Controller } from "../../common/decorators/controller.decorator.js";
-import { MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../../common/types/metadata.keys.js";
-import { Query, Body } from "../../common/decorators/args.decorator.js"; // Додав Body
-import { ParseIntPipe } from "../../common/pipes/parce-int-pipe.js";
-import { UsePipes } from "../../common/decorators/use-pipes.decorator.js";
-import { ValidationPipe } from "../../common/pipes/validation-pipe.js";
-import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe.js"; // Ваш новий пайп
-import { UseGuards } from "../../common/decorators/use-guards.decorator.js";
-import { AuthGuard } from "../../guards/auth_guard.js";
-import { UseInterceptors } from "../../common/decorators/use-interceptors.js";
-import { TransformInterceptor } from "../../interceptors/transform-interceptor.js";
-import { HttpExceptionFilter } from "../../filters/http-exception.filter.js";
-import { UseFilters } from "../../common/decorators/use-filters.decorator.js";
+import {
+  AuthGuard,
+  Body,
+  Controller,
+  Get,
+  HttpExceptionFilter,
+  Injectable,
+  Module,
+  MODULE_CONTROLLERS_PREFIX,
+  MODULE_CONTROLLERS_REQUEST,
+  MODULE_CONTROLLERS_REQUEST_ARGS,
+  NestFactory,
+  ParseIntPipe,
+  Post,
+  Query,
+  TransformInterceptor,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+  UsePipes, ValidationPipe,
+  ZodValidationPipe
+} from "../../core/index.js";
 
 const CreateUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 chars"),

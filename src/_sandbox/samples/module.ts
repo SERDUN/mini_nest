@@ -1,5 +1,5 @@
-import { Module } from "../../common/decorators/module.decorator.js";
-import { MODULE_CONTROLLERS, MODULE_IMPORTS, MODULE_PROVIDERS } from "../../common/types/metadata.keys.js";
+import { Module } from "../../core/common/decorators/module.decorator.js";
+import { MODULE_CONTROLLERS, MODULE_IMPORTS, MODULE_PROVIDERS } from "../../core/common/types/metadata.keys.js";
 
 export class UserService {
   getUser() {

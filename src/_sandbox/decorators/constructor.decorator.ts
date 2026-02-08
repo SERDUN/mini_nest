@@ -1,6 +1,6 @@
 import "reflect-metadata";
 
-import { InjectionToken } from "../../common/decorators/inject.decorator.js";
+import { InjectionToken } from "../../core/index.js";
 
 export const EXAMPLE_CONSTRUCTOR_METADATA_KEY = "EXAMPLE_CONSTRUCTOR_METADATA_KEY";
 

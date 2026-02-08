@@ -1,7 +1,7 @@
-import { Injectable } from "../../common/decorators/injectable.decorator.js";
-import { ServiceLocator } from "../../common/utils/service-locator.js";
-import { Scope } from "../../common/types/di.scope.js";
-import { Inject } from "../../common/decorators/inject.decorator.js";
+import { Injectable } from "../../core/common/decorators/injectable.decorator.js";
+import { ServiceLocator } from "../../core/common/utils/service-locator.js";
+import { Scope } from "../../core/common/types/di.scope.js";
+import { Inject } from "../../core/common/decorators/inject.decorator.js";
 
 const RETRY_COUNT = Symbol('RETRY_COUNT');
 const RETRY_SUMM = Symbol('RETRY_SUMM');
