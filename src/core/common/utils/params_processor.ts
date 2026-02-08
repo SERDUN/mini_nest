@@ -1,9 +1,6 @@
 import { RouteArgsFactory } from "./argument_resolver.js";
-import { ArgumentMetadata } from "../types/argument_metadata.js";
-import { PipeTransform } from "../types/pipe-transform.js";
-import { RouteParamMetadata } from "../decorators/args.decorator.js";
-import { Type } from "../types/type.js";
-import { ExecutionContext } from "../types/execution-context.js";
+import { ArgumentMetadata ,PipeTransform,ExecutionContext,Type} from "../types/index.js";
+import { RouteParamMetadata } from "../decorators/index.js";
 import { ServiceLocator } from "./service-locator.js";
 
 export class ParamsProcessor {
@@ -18,7 +15,6 @@ export class ParamsProcessor {
     metatype: any,
     scopedPipes: (PipeTransform | Type<PipeTransform>)[]
   ): Promise<any> {
-
     const resolver = this.routeArgsFactory.getResolver(paramMetadata.type);
 
     if (!resolver) {
@@ -60,7 +56,11 @@ export class ParamsProcessor {
 
   private resolvePipeInstance(pipeOrClass: PipeTransform | Type<PipeTransform>): PipeTransform {
     if (typeof pipeOrClass === 'function') {
-      return this.serviceLocator.resolve(pipeOrClass);
+      try {
+        return this.serviceLocator.resolve(pipeOrClass);
+      } catch (e) {
+        return new (pipeOrClass as any)();
+      }
     }
     return pipeOrClass;
   }

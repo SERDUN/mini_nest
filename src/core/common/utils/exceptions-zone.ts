@@ -1,8 +1,5 @@
-import { ExceptionFilter } from "../types/exception-filter.js";
+import { ExceptionFilter,FILTER_CATCH_EXCEPTIONS,ExecutionContext,HttpException } from "../types/index.js";
 import { Type } from "../types/type.js";
-import { FILTER_CATCH_EXCEPTIONS } from "../types/metadata.keys.js";
-import { ExecutionContext } from "../types/execution-context.js";
-import { HttpException } from "../types/http-exception.js";
 import { ServiceLocator } from "./service-locator.js";
 
 export class ExceptionsZone {
@@ -51,8 +48,13 @@ export class ExceptionsZone {
 
   private resolveFilter(filterOrType: ExceptionFilter | Type<ExceptionFilter>): ExceptionFilter {
     if (typeof filterOrType === 'function') {
-      return this.serviceLocator.resolve(filterOrType);
+      try {
+        return this.serviceLocator.resolve(filterOrType);
+      } catch (e) {
+        return new (filterOrType as any)();
+      }
     }
+
     return filterOrType;
   }
 }

@@ -44,7 +44,11 @@ export class InterceptorsConsumer {
 
   private resolveInstance(interceptor: NestInterceptor | Type<NestInterceptor>): NestInterceptor {
     if (typeof interceptor === 'function') {
-      return this.serviceLocator.resolve(interceptor);
+      try {
+        return this.serviceLocator.resolve(interceptor);
+      } catch (e) {
+        return new (interceptor as any)();
+      }
     }
     return interceptor;
   }

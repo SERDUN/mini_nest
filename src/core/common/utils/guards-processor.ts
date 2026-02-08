@@ -47,9 +47,10 @@ export class GuardsConsumer {
   }
 
   private resolveGuardInstance(guardOrType: CanActivate | Type<CanActivate>): CanActivate {
-    if (typeof guardOrType === 'function') {
+    try {
       return this.serviceLocator.resolve(guardOrType);
+    } catch (e) {
+      return new (guardOrType as any)();
     }
-    return guardOrType;
   }
 }
