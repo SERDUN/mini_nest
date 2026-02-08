@@ -9,6 +9,8 @@ import { Query } from "../../common/decorators/args.decorator.js";
 import { ParseIntPipe } from "../../common/pipes/parce-int-pipe.js";
 import { UsePipes } from "../../common/decorators/use-pipes.decorator.js";
 import { ValidationPipe } from "../../common/pipes/validation-pipe.js";
+import { UseGuards } from "../../common/decorators/use-guards.decorator.js";
+import { AuthGuard } from "../../guards/auth_guard.js";
 
 @Injectable()
 class UsersService {
@@ -16,6 +18,7 @@ class UsersService {
 }
 
 @UsePipes(new ValidationPipe("Controller-level pipe"))
+@UseGuards(AuthGuard)
 @Controller("/user")
 class UserController {
   constructor(private usersService: UsersService) {}

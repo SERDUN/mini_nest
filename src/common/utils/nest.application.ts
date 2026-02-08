@@ -10,21 +10,29 @@ import { ExecutionContext, NestExecutionContext } from "../types/execution-conte
 import { ParamsProcessor } from "./params_processor.js";
 import { PipeTransform } from "../types/pipe-transform.js";
 import { Type } from "../types/type.js";
+import { CanActivate } from "../types/can_activate.js";
+import { GuardsConsumer } from "./guards-processor.js";
 
 export class NestApplication {
   private readonly app: Express;
   private readonly routeArgsFactory: RouteArgsFactory;
   private readonly paramsProcessor: ParamsProcessor;
+  private readonly guardsConsumer: GuardsConsumer;
   private globalPipes: (PipeTransform | Type<PipeTransform>)[] = [];
+  private globalGuards: any[] = [];
 
   public useGlobalPipes(...pipes: (PipeTransform | Type<PipeTransform>)[]) {
     this.globalPipes.push(...pipes);
+  }
+  public useGlobalGuards(...guards: any[]) {
+    this.globalGuards.push(...guards);
   }
   constructor(private readonly serviceLocator: ServiceLocator, private readonly controllers: any[]) {
     this.app = express();
     this.app.use(express.json());
     this.routeArgsFactory = new RouteArgsFactory();
     this.paramsProcessor = new ParamsProcessor(this.routeArgsFactory);
+    this.guardsConsumer = new GuardsConsumer();
     this.initRoutes();
   }
 
@@ -73,6 +81,8 @@ export class NestApplication {
       );
 
       try {
+        await this.guardsConsumer.tryActivate(context, this.globalGuards);
+
         const args = await this.resolveMethodArgs(context, controller, methodName);
         const result = await (controller as any)[methodName](...args);
         this.handleResponse(res, result);
@@ -80,6 +90,16 @@ export class NestApplication {
         this.handleError(res, error, req.method, req.path);
       }
     };
+  }
+
+  private async runGuards(guards: CanActivate[], context: ExecutionContext): Promise<void> {
+    for (const guard of guards) {
+      const canActivate = await guard.canActivate(context);
+
+      if (!canActivate) {
+        throw new Error("ForbiddenResource");
+      }
+    }
   }
 
   private async resolveMethodArgs(context: ExecutionContext, controller: any, methodName: string): Promise<any[]> {
