@@ -1,6 +1,7 @@
 import { ServiceLocator } from "./service-locator.js";
 import express, { Express, NextFunction, Request, Response } from 'express';
 import { DESIGN_PARAMTYPES, MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS,
+  MODULE_FILTERS_KEY,
   MODULE_PIPES_KEY
 } from "../types/metadata.keys.js";
 import { PathUtils } from "./path.utils.js";
@@ -12,7 +13,7 @@ import { PipeTransform } from "../types/pipe-transform.js";
 import { Type } from "../types/type.js";
 import { GuardsConsumer } from "./guards-processor.js";
 import { InterceptorsConsumer } from "./interceptors-consumer.js";
-import { HttpException } from "../types/http-exception.js";
+import { ExceptionsZone } from "./exceptions-zone.js";
 
 export class NestApplication {
   private readonly app: Express;
@@ -21,6 +22,8 @@ export class NestApplication {
   private readonly guardsConsumer: GuardsConsumer;
   private globalPipes: (PipeTransform | Type<PipeTransform>)[] = [];
   private globalGuards: any[] = [];
+  private readonly exceptionsZone: ExceptionsZone;
+  private globalFilters: any[] = [];
 
   private readonly interceptorsConsumer: InterceptorsConsumer;
   private globalInterceptors: any[] = [];
@@ -31,6 +34,9 @@ export class NestApplication {
   public useGlobalGuards(...guards: any[]) {
     this.globalGuards.push(...guards);
   }
+  public useGlobalFilters(...filters: any[]) {
+    this.globalFilters.push(...filters);
+  }
   constructor(private readonly serviceLocator: ServiceLocator, private readonly controllers: any[]) {
     this.app = express();
     this.app.use(express.json());
@@ -38,6 +44,7 @@ export class NestApplication {
     this.paramsProcessor = new ParamsProcessor(this.routeArgsFactory);
     this.guardsConsumer = new GuardsConsumer();
     this.interceptorsConsumer = new InterceptorsConsumer();
+    this.exceptionsZone = new ExceptionsZone();
   }
 
   public useGlobalInterceptors(...interceptors: any[]) {
@@ -109,7 +116,7 @@ export class NestApplication {
 
         this.handleResponse(res, result);
       } catch (error) {
-        this.handleError(res, error, req.method, req.path);
+        await this.handleException(error, context, controller, methodName);
       }
     };
   }
@@ -155,24 +162,18 @@ export class NestApplication {
     }
   }
 
-  private handleError(res: Response, error: any, method: string, path: string) {
-    if (error instanceof HttpException) {
-      res.status(error.getStatus()).json({
-        statusCode: error.getStatus(),
-        message: error.getResponse(),
-        timestamp: new Date().toISOString(),
-        path: path,
-      });
-      return;
-    }
+  private async handleException(error: any, context: ExecutionContext, controller: any, methodName: string) {
+    const controllerClass = controller.constructor;
 
-    console.error(`[System Error] ${method} ${path}:`, error);
+    const methodFilters = Reflect.getMetadata(MODULE_FILTERS_KEY, controllerClass.prototype, methodName) || [];
+    const controllerFilters = Reflect.getMetadata(MODULE_FILTERS_KEY, controllerClass) || [];
 
-    if (!res.headersSent) {
-      res.status(500).json({
-        statusCode: 500,
-        message: "Internal Server Error",
-      });
-    }
+    const allFilters = [
+      ...methodFilters,
+      ...controllerFilters,
+      ...this.globalFilters
+    ];
+
+    await this.exceptionsZone.handle(error, context, allFilters);
   }
 }

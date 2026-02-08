@@ -14,6 +14,8 @@ import { UseGuards } from "../../common/decorators/use-guards.decorator.js";
 import { AuthGuard } from "../../guards/auth_guard.js";
 import { UseInterceptors } from "../../common/decorators/use-interceptors.js";
 import { TransformInterceptor } from "../../interceptors/transform-interceptor.js";
+import { HttpExceptionFilter } from "../../filters/http-exception.filter.js";
+import { UseFilters } from "../../common/decorators/use-filters.decorator.js";
 
 const CreateUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 chars"),
@@ -39,6 +41,7 @@ class UsersService {
 @UseGuards(AuthGuard)
 @UseInterceptors(TransformInterceptor)
 @Controller("/user")
+@UseFilters(HttpExceptionFilter)
 class UserController {
   constructor(private usersService: UsersService) {}
 

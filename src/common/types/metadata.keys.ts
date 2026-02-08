@@ -15,3 +15,6 @@ export const MODULE_CONTROLLERS_REQUEST_ARGS = "module:controllers:request:args"
 export const MODULE_PIPES_KEY = 'module:controllers:pipes';
 export const MODULE_GUARDS_KEY = 'module:guards';
 export const MODULE_INTERCEPTORS_KEY = 'custom:interceptors';
+
+export const MODULE_FILTERS_KEY = 'custom:filters';
+export const FILTER_CATCH_EXCEPTIONS = 'custom:filter-catch-exceptions';
