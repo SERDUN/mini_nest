@@ -6,6 +6,7 @@ import { Get } from "../../common/decorators/request.decorator.js";
 import { Controller } from "../../common/decorators/controller.decorator.js";
 import { MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../../common/types/metadata.keys.js";
 import { Query } from "../../common/decorators/args.decorator.js";
+import { ParseIntPipe } from "../../common/pipes/parce-int-pipe.js";
 
 @Injectable()
 class UsersService {
@@ -24,7 +25,7 @@ class UserController {
   }
 
   @Get('/status')
-    getStatus(@Query("country") country: string,@Query("limit") limit: number) {
+    getStatus(@Query("country") country: string,@Query("limit",ParseIntPipe) limit: number) {
     console.log(country, limit);
     return {status: 'ok'};
   }
@@ -66,6 +67,7 @@ const runMock= async ()=> {
 }
 
 export const runMain = async () => {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+  runMock();
+  // const app = await NestFactory.create(AppModule);
+  // await app.listen(3000);
 }
