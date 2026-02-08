@@ -3,17 +3,20 @@ import express, { Express, NextFunction, Request, Response } from 'express';
 import { DESIGN_PARAMTYPES, MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../types/metadata.keys.js";
 import { PathUtils } from "./path.utils.js";
 import { RouteArgsFactory } from "./argument_resolver.js";
-import { ArgumentMetadata } from "../types/argument_metadata.js";
-import { PipeTransform } from "../types/pipe-transform.js";
+
+import { ExecutionContext, NestExecutionContext } from "../types/execution-context.js";
+import { ParamsProcessor } from "./params_processor.js";
 
 export class NestApplication {
   private readonly app: Express;
   private readonly routeArgsFactory: RouteArgsFactory;
+  private readonly paramsProcessor: ParamsProcessor;
 
-  constructor(private readonly serviceLocator: ServiceLocator,private readonly controllers: any[]) {
+  constructor(private readonly serviceLocator: ServiceLocator, private readonly controllers: any[]) {
     this.app = express();
     this.app.use(express.json());
     this.routeArgsFactory = new RouteArgsFactory();
+    this.paramsProcessor = new ParamsProcessor(this.routeArgsFactory);
     this.initRoutes();
   }
 
@@ -35,10 +38,6 @@ export class NestApplication {
       const prefix = Reflect.getMetadata(MODULE_CONTROLLERS_PREFIX, ControllerClass) || '';
       const routes = Reflect.getMetadata(MODULE_CONTROLLERS_REQUEST, ControllerClass.prototype) || {};
 
-      console.log(
-        `Setting up routes for controller: ${ControllerClass.name} with prefix: '${prefix}' and routes:`, routes
-      )
-
       Object.values(routes).forEach((route: any) => {
         const { path, requestMethod, methodName } = route;
         const fullPath = PathUtils.join(prefix, path);
@@ -57,11 +56,17 @@ export class NestApplication {
 
   private createRouteHandler(controller: any, methodName: string) {
     return async (req: Request, res: Response, next: NextFunction) => {
+      const context = new NestExecutionContext(
+        controller.constructor,
+        controller[methodName],
+        req,
+        res,
+        next
+      );
+
       try {
-        const args = await this.resolveMethodArgs(controller, methodName, req, res);
-
+        const args = await this.resolveMethodArgs(context, controller, methodName);
         const result = await (controller as any)[methodName](...args);
-
         this.handleResponse(res, result);
       } catch (error) {
         this.handleError(res, error, req.method, req.path);
@@ -69,7 +74,7 @@ export class NestApplication {
     };
   }
 
-  private async resolveMethodArgs(controller: any, methodName: string, req: Request, res: Response): Promise<any[]> {
+  private async resolveMethodArgs(context: ExecutionContext, controller: any, methodName: string): Promise<any[]> {
     const controllerPrototype = Object.getPrototypeOf(controller);
 
     const allControllersArgs = Reflect.getOwnMetadata(MODULE_CONTROLLERS_REQUEST_ARGS, controllerPrototype) || {};
@@ -81,45 +86,15 @@ export class NestApplication {
 
     for (const index of sortedKeys) {
       const paramMetadata = methodArgs[index];
-      const resolver = this.routeArgsFactory.getResolver(paramMetadata.type);
 
-      if (!resolver) {
-        args[index] = undefined;
-        continue;
-      }
-
-      let value = resolver.resolve(req, res, paramMetadata);
-
-      value = await this.applyPipes(value, paramMetadata, paramTypes[index]);
-
-      args[index] = value;
+      args[index] = await this.paramsProcessor.resolve(
+        context,
+        paramMetadata,
+        paramTypes[index]
+      );
     }
 
     return args;
-  }
-
-  private async applyPipes(value: any, paramMetadata: any, metatype: any): Promise<any> {
-    const pipes = paramMetadata.pipes || [];
-
-    for (const pipeOrClass of pipes) {
-      const pipeInstance = this.resolvePipeInstance(pipeOrClass);
-
-      const metadata: ArgumentMetadata = {
-        type: paramMetadata.type,
-        metatype: metatype,
-        data: paramMetadata.data
-      };
-
-      value = await pipeInstance.transform(value, metadata);
-    }
-    return value;
-  }
-
-  private resolvePipeInstance(pipeOrClass: PipeTransform | (new () => PipeTransform)): PipeTransform {
-    if (typeof pipeOrClass === 'function') {
-      return new (pipeOrClass as any)(); // use service locator if needed for more complex pipes
-    }
-    return pipeOrClass;
   }
 
   private handleResponse(res: Response, result: any) {
