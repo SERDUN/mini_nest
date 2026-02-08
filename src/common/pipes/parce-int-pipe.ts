@@ -12,6 +12,6 @@ export class ParseIntPipe implements PipeTransform<string, number> {
     if (isNaN(val)) {
       throw new Error('Validation failed (numeric string is expected)');
     }
-    return val;
+    return val*2;
   }
 }

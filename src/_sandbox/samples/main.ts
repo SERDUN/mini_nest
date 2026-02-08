@@ -27,7 +27,7 @@ class UserController {
   @Get('/status')
     getStatus(@Query("country") country: string,@Query("limit",ParseIntPipe) limit: number) {
     console.log(country, limit);
-    return {status: 'ok'};
+    return {status: 'ok:', country, limit};
   }
 }
 
@@ -67,7 +67,6 @@ const runMock= async ()=> {
 }
 
 export const runMain = async () => {
-  runMock();
-  // const app = await NestFactory.create(AppModule);
-  // await app.listen(3000);
+  const app = await NestFactory.create(AppModule);
+  await app.listen(3000);
 }
