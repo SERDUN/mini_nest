@@ -1,17 +1,25 @@
 import { ServiceLocator } from "./service-locator.js";
 import express, { Express, NextFunction, Request, Response } from 'express';
-import { DESIGN_PARAMTYPES, MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../types/metadata.keys.js";
+import { DESIGN_PARAMTYPES, MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS,
+  MODULE_PIPES_KEY
+} from "../types/metadata.keys.js";
 import { PathUtils } from "./path.utils.js";
 import { RouteArgsFactory } from "./argument_resolver.js";
 
 import { ExecutionContext, NestExecutionContext } from "../types/execution-context.js";
 import { ParamsProcessor } from "./params_processor.js";
+import { PipeTransform } from "../types/pipe-transform.js";
+import { Type } from "../types/type.js";
 
 export class NestApplication {
   private readonly app: Express;
   private readonly routeArgsFactory: RouteArgsFactory;
   private readonly paramsProcessor: ParamsProcessor;
+  private globalPipes: (PipeTransform | Type<PipeTransform>)[] = [];
 
+  public useGlobalPipes(...pipes: (PipeTransform | Type<PipeTransform>)[]) {
+    this.globalPipes.push(...pipes);
+  }
   constructor(private readonly serviceLocator: ServiceLocator, private readonly controllers: any[]) {
     this.app = express();
     this.app.use(express.json());
@@ -75,7 +83,18 @@ export class NestApplication {
   }
 
   private async resolveMethodArgs(context: ExecutionContext, controller: any, methodName: string): Promise<any[]> {
+    const controllerClass = controller.constructor;
     const controllerPrototype = Object.getPrototypeOf(controller);
+
+    const controllerPipes = Reflect.getMetadata(MODULE_PIPES_KEY, controllerClass) || [];
+    const methodPipes = Reflect.getMetadata(MODULE_PIPES_KEY, controllerPrototype, methodName) || [];
+
+
+    const scopedPipes = [
+      ...this.globalPipes,
+      ...controllerPipes,
+      ...methodPipes
+    ];
 
     const allControllersArgs = Reflect.getOwnMetadata(MODULE_CONTROLLERS_REQUEST_ARGS, controllerPrototype) || {};
     const methodArgs = allControllersArgs[methodName] || {};
@@ -90,7 +109,8 @@ export class NestApplication {
       args[index] = await this.paramsProcessor.resolve(
         context,
         paramMetadata,
-        paramTypes[index]
+        paramTypes[index],
+        scopedPipes
       );
     }
 

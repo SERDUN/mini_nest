@@ -7,12 +7,15 @@ import { Controller } from "../../common/decorators/controller.decorator.js";
 import { MODULE_CONTROLLERS_PREFIX, MODULE_CONTROLLERS_REQUEST, MODULE_CONTROLLERS_REQUEST_ARGS } from "../../common/types/metadata.keys.js";
 import { Query } from "../../common/decorators/args.decorator.js";
 import { ParseIntPipe } from "../../common/pipes/parce-int-pipe.js";
+import { UsePipes } from "../../common/decorators/use-pipes.decorator.js";
+import { ValidationPipe } from "../../common/pipes/validation-pipe.js";
 
 @Injectable()
 class UsersService {
   findAll() { return ['Alice', 'Bob']; }
 }
 
+@UsePipes(new ValidationPipe("Controller-level pipe"))
 @Controller("/user")
 class UserController {
   constructor(private usersService: UsersService) {}
@@ -63,10 +66,10 @@ const runMock= async ()=> {
   console.log("Fetched users:", users);
 
   _printControllerMetadata(UserController);
-
 }
 
 export const runMain = async () => {
   const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe("Global pipe"));
   await app.listen(3000);
 }

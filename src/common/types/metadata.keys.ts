@@ -12,3 +12,4 @@ export const MODULE_CONTROLLERS = "module:controllers" as const;
 export const MODULE_CONTROLLERS_PREFIX = "module:controllers:prefix" as const;
 export const MODULE_CONTROLLERS_REQUEST = "module:controllers:request" as const;
 export const MODULE_CONTROLLERS_REQUEST_ARGS = "module:controllers:request:args" as const;
+export const MODULE_PIPES_KEY = 'module:controllers:pipes';
