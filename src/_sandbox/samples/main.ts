@@ -11,6 +11,8 @@ import { UsePipes } from "../../common/decorators/use-pipes.decorator.js";
 import { ValidationPipe } from "../../common/pipes/validation-pipe.js";
 import { UseGuards } from "../../common/decorators/use-guards.decorator.js";
 import { AuthGuard } from "../../guards/auth_guard.js";
+import { UseInterceptors } from "../../common/decorators/use-interceptors.js";
+import { TransformInterceptor } from "../../interceptors/transform-interceptor.js";
 
 @Injectable()
 class UsersService {
@@ -19,6 +21,7 @@ class UsersService {
 
 @UsePipes(new ValidationPipe("Controller-level pipe"))
 @UseGuards(AuthGuard)
+@UseInterceptors(TransformInterceptor)
 @Controller("/user")
 class UserController {
   constructor(private usersService: UsersService) {}

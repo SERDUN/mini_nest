@@ -12,6 +12,7 @@ import { PipeTransform } from "../types/pipe-transform.js";
 import { Type } from "../types/type.js";
 import { CanActivate } from "../types/can_activate.js";
 import { GuardsConsumer } from "./guards-processor.js";
+import { InterceptorsConsumer } from "./interceptors-consumer.js";
 
 export class NestApplication {
   private readonly app: Express;
@@ -20,6 +21,9 @@ export class NestApplication {
   private readonly guardsConsumer: GuardsConsumer;
   private globalPipes: (PipeTransform | Type<PipeTransform>)[] = [];
   private globalGuards: any[] = [];
+
+  private readonly interceptorsConsumer: InterceptorsConsumer;
+  private globalInterceptors: any[] = [];
 
   public useGlobalPipes(...pipes: (PipeTransform | Type<PipeTransform>)[]) {
     this.globalPipes.push(...pipes);
@@ -33,7 +37,12 @@ export class NestApplication {
     this.routeArgsFactory = new RouteArgsFactory();
     this.paramsProcessor = new ParamsProcessor(this.routeArgsFactory);
     this.guardsConsumer = new GuardsConsumer();
+    this.interceptorsConsumer = new InterceptorsConsumer();
     this.initRoutes();
+  }
+
+  public useGlobalInterceptors(...interceptors: any[]) {
+    this.globalInterceptors.push(...interceptors);
   }
 
   public get<T>(token: any): T {
@@ -83,8 +92,16 @@ export class NestApplication {
       try {
         await this.guardsConsumer.tryActivate(context, this.globalGuards);
 
-        const args = await this.resolveMethodArgs(context, controller, methodName);
-        const result = await (controller as any)[methodName](...args);
+        const interceptors = this.interceptorsConsumer.getInterceptors(context, this.globalInterceptors);
+        const result = await this.interceptorsConsumer.intercept(
+          context,
+          interceptors,
+          async () => {
+            const args = await this.resolveMethodArgs(context, controller, methodName);
+            return await (controller as any)[methodName](...args);
+          }
+        );
+
         this.handleResponse(res, result);
       } catch (error) {
         this.handleError(res, error, req.method, req.path);
