@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import {  RouteParamMetadata } from "../decorators/args.decorator.js";
-import { Paramtype } from "../types/paramtype.js";
+import { ArgsType } from "../types/args-type.js";
 
 export interface IArgumentResolver {
   resolve(req: Request, res: Response, paramMetadata: RouteParamMetadata): any;
@@ -14,17 +14,17 @@ export class QueryResolver implements IArgumentResolver {
 }
 
 export class RouteArgsFactory {
-  private resolvers = new Map<Paramtype, IArgumentResolver>();
+  private resolvers = new Map<ArgsType, IArgumentResolver>();
 
   constructor() {
     this.registerDefaults();
   }
 
   private registerDefaults() {
-    this.resolvers.set(Paramtype.QUERY, new QueryResolver());
+    this.resolvers.set(ArgsType.QUERY, new QueryResolver());
   }
 
-  public getResolver(type: Paramtype): IArgumentResolver | undefined {
+  public getResolver(type: ArgsType): IArgumentResolver | undefined {
     return this.resolvers.get(type);
   }
 }
