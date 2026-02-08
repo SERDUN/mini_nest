@@ -101,6 +101,11 @@ const runMock= async ()=> {
 
 export const runMain = async () => {
   const app = await NestFactory.create(AppModule);
+  app.use((req, res, next) => {
+    console.log(`[Middleware] Incoming request: ${req.method} ${req.url}`);
+    next();
+  });
   app.useGlobalPipes(new ValidationPipe("Global pipe"));
+
   await app.listen(3000);
 }

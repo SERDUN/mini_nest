@@ -10,7 +10,6 @@ import { ExecutionContext, NestExecutionContext } from "../types/execution-conte
 import { ParamsProcessor } from "./params_processor.js";
 import { PipeTransform } from "../types/pipe-transform.js";
 import { Type } from "../types/type.js";
-import { CanActivate } from "../types/can_activate.js";
 import { GuardsConsumer } from "./guards-processor.js";
 import { InterceptorsConsumer } from "./interceptors-consumer.js";
 import { HttpException } from "../types/http-exception.js";
@@ -39,11 +38,14 @@ export class NestApplication {
     this.paramsProcessor = new ParamsProcessor(this.routeArgsFactory);
     this.guardsConsumer = new GuardsConsumer();
     this.interceptorsConsumer = new InterceptorsConsumer();
-    this.initRoutes();
   }
 
   public useGlobalInterceptors(...interceptors: any[]) {
     this.globalInterceptors.push(...interceptors);
+  }
+
+  public use(middleware: any) {
+    this.app.use(middleware);
   }
 
   public get<T>(token: any): T {
@@ -51,6 +53,8 @@ export class NestApplication {
   }
 
   public async listen(port: number) {
+    this.initRoutes();
+
     this.app.listen(port, () => {
       console.log(`Server running on http://localhost:${port}`);
     });
@@ -108,16 +112,6 @@ export class NestApplication {
         this.handleError(res, error, req.method, req.path);
       }
     };
-  }
-
-  private async runGuards(guards: CanActivate[], context: ExecutionContext): Promise<void> {
-    for (const guard of guards) {
-      const canActivate = await guard.canActivate(context);
-
-      if (!canActivate) {
-        throw new Error("ForbiddenResource");
-      }
-    }
   }
 
   private async resolveMethodArgs(context: ExecutionContext, controller: any, methodName: string): Promise<any[]> {
