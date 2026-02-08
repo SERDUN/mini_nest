@@ -2,6 +2,7 @@ import { CanActivate } from "../types/can_activate.js";
 import { Type } from "../types/type.js";
 import { MODULE_GUARDS_KEY } from "../types/metadata.keys.js";
 import { ExecutionContext } from "../types/execution-context.js";
+import { ForbiddenException } from "../types/http-exception.js";
 
 export class GuardsConsumer {
   public async tryActivate(
@@ -30,7 +31,7 @@ export class GuardsConsumer {
       const canActivate = await guardInstance.canActivate(context);
 
       if (!canActivate) {
-        throw new Error("ForbiddenResource");
+        throw new ForbiddenException("You do not have permission");
       }
     }
   }

@@ -13,6 +13,7 @@ import { Type } from "../types/type.js";
 import { CanActivate } from "../types/can_activate.js";
 import { GuardsConsumer } from "./guards-processor.js";
 import { InterceptorsConsumer } from "./interceptors-consumer.js";
+import { HttpException } from "../types/http-exception.js";
 
 export class NestApplication {
   private readonly app: Express;
@@ -161,13 +162,22 @@ export class NestApplication {
   }
 
   private handleError(res: Response, error: any, method: string, path: string) {
-    console.error(`Error processing request ${method} ${path}:`, error);
+    if (error instanceof HttpException) {
+      res.status(error.getStatus()).json({
+        statusCode: error.getStatus(),
+        message: error.getResponse(),
+        timestamp: new Date().toISOString(),
+        path: path,
+      });
+      return;
+    }
+
+    console.error(`[System Error] ${method} ${path}:`, error);
 
     if (!res.headersSent) {
-      res.status(400).json({
-        statusCode: 400,
-        message: error.message || "Bad Request",
-        error: "Bad Request"
+      res.status(500).json({
+        statusCode: 500,
+        message: "Internal Server Error",
       });
     }
   }
