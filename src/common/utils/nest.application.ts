@@ -116,7 +116,19 @@ export class NestApplication {
 
         this.handleResponse(res, result);
       } catch (error) {
-        await this.handleException(error, context, controller, methodName);
+        try {
+          await this.handleException(error, context, controller, methodName);
+        } catch (criticalError) {
+          console.error("Inside ExceptionHandler:", criticalError);
+          console.error("Original Error:", error);
+
+          if (!res.headersSent) {
+            res.status(500).json({
+              statusCode: 500,
+              message: "Internal Server Error",
+            });
+          }
+        }
       }
     };
   }
