@@ -2,8 +2,11 @@ import { CallHandler, NestInterceptor } from "../types/nest-interceptor.js";
 import { Type } from "../types/type.js";
 import { MODULE_INTERCEPTORS_KEY } from "../types/metadata.keys.js";
 import { ExecutionContext } from "../types/execution-context.js";
+import { ServiceLocator } from "./service-locator.js";
 
 export class InterceptorsConsumer {
+  constructor(private readonly serviceLocator: ServiceLocator) {}
+
   public async intercept(
     context: ExecutionContext,
     interceptors: (NestInterceptor | Type<NestInterceptor>)[],
@@ -25,7 +28,6 @@ export class InterceptorsConsumer {
     return interceptorInstance.intercept(context, nextHandler);
   }
 
-
   public getInterceptors(context: ExecutionContext, globalInterceptors: any[]): any[] {
     const controllerClass = context.getClass();
     const handler = context.getHandler();
@@ -42,7 +44,7 @@ export class InterceptorsConsumer {
 
   private resolveInstance(interceptor: NestInterceptor | Type<NestInterceptor>): NestInterceptor {
     if (typeof interceptor === 'function') {
-      return new (interceptor as any)();
+      return this.serviceLocator.resolve(interceptor);
     }
     return interceptor;
   }

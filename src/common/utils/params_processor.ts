@@ -4,9 +4,13 @@ import { PipeTransform } from "../types/pipe-transform.js";
 import { RouteParamMetadata } from "../decorators/args.decorator.js";
 import { Type } from "../types/type.js";
 import { ExecutionContext } from "../types/execution-context.js";
+import { ServiceLocator } from "./service-locator.js";
 
 export class ParamsProcessor {
-  constructor(private readonly routeArgsFactory: RouteArgsFactory) {}
+  constructor(
+    private readonly serviceLocator: ServiceLocator,
+    private readonly routeArgsFactory: RouteArgsFactory
+  ) {}
 
   public async resolve(
     context: ExecutionContext,
@@ -56,7 +60,7 @@ export class ParamsProcessor {
 
   private resolvePipeInstance(pipeOrClass: PipeTransform | Type<PipeTransform>): PipeTransform {
     if (typeof pipeOrClass === 'function') {
-      return new (pipeOrClass as any)();
+      return this.serviceLocator.resolve(pipeOrClass);
     }
     return pipeOrClass;
   }

@@ -1,10 +1,13 @@
 import { ExceptionFilter } from "../types/exception-filter.js";
 import { Type } from "../types/type.js";
-import { FILTER_CATCH_EXCEPTIONS, MODULE_FILTERS_KEY } from "../types/metadata.keys.js";
+import { FILTER_CATCH_EXCEPTIONS } from "../types/metadata.keys.js";
 import { ExecutionContext } from "../types/execution-context.js";
 import { HttpException } from "../types/http-exception.js";
+import { ServiceLocator } from "./service-locator.js";
 
 export class ExceptionsZone {
+  constructor(private readonly serviceLocator: ServiceLocator) {}
+
   public async handle(
     exception: any,
     context: ExecutionContext,
@@ -12,6 +15,7 @@ export class ExceptionsZone {
   ) {
     for (const filterOrType of scopedFilters) {
       const filter = this.resolveFilter(filterOrType);
+
       const caughtExceptions = Reflect.getMetadata(FILTER_CATCH_EXCEPTIONS, filter.constructor) || [];
 
       const isMatch =
@@ -47,7 +51,7 @@ export class ExceptionsZone {
 
   private resolveFilter(filterOrType: ExceptionFilter | Type<ExceptionFilter>): ExceptionFilter {
     if (typeof filterOrType === 'function') {
-      return new (filterOrType as any)();
+      return this.serviceLocator.resolve(filterOrType);
     }
     return filterOrType;
   }

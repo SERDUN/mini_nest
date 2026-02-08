@@ -1,6 +1,8 @@
 import { CanActivate } from "../common/types/can_activate.js";
 import { ExecutionContext } from "../common/types/execution-context.js";
+import { Injectable } from "../common/decorators/injectable.decorator.js";
 
+@Injectable()
 export class AuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.getRequest();

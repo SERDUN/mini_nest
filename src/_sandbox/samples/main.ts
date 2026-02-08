@@ -76,6 +76,7 @@ class UsersModule {}
 
 @Module({
   imports: [UsersModule],
+  providers: [AuthGuard,HttpExceptionFilter,TransformInterceptor],
 })
 class AppModule {}
 

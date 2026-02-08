@@ -3,8 +3,11 @@ import { Type } from "../types/type.js";
 import { MODULE_GUARDS_KEY } from "../types/metadata.keys.js";
 import { ExecutionContext } from "../types/execution-context.js";
 import { ForbiddenException } from "../types/http-exception.js";
+import { ServiceLocator } from "./service-locator.js";
 
 export class GuardsConsumer {
+  constructor(private readonly serviceLocator: ServiceLocator) {}
+
   public async tryActivate(
     context: ExecutionContext,
     globalGuards: (CanActivate | Type<CanActivate>)[]
@@ -45,7 +48,7 @@ export class GuardsConsumer {
 
   private resolveGuardInstance(guardOrType: CanActivate | Type<CanActivate>): CanActivate {
     if (typeof guardOrType === 'function') {
-      return new (guardOrType as any)();
+      return this.serviceLocator.resolve(guardOrType);
     }
     return guardOrType;
   }

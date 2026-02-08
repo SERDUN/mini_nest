@@ -41,10 +41,10 @@ export class NestApplication {
     this.app = express();
     this.app.use(express.json());
     this.routeArgsFactory = new RouteArgsFactory();
-    this.paramsProcessor = new ParamsProcessor(this.routeArgsFactory);
-    this.guardsConsumer = new GuardsConsumer();
-    this.interceptorsConsumer = new InterceptorsConsumer();
-    this.exceptionsZone = new ExceptionsZone();
+    this.paramsProcessor = new ParamsProcessor(serviceLocator,this.routeArgsFactory);
+    this.guardsConsumer = new GuardsConsumer(serviceLocator);
+    this.interceptorsConsumer = new InterceptorsConsumer(serviceLocator);
+    this.exceptionsZone = new ExceptionsZone(serviceLocator);
   }
 
   public useGlobalInterceptors(...interceptors: any[]) {
@@ -54,6 +54,7 @@ export class NestApplication {
   public use(middleware: any) {
     this.app.use(middleware);
   }
+
 
   public get<T>(token: any): T {
     return this.serviceLocator.resolve<T>(token);
